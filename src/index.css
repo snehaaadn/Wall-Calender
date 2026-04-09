@@ -1,0 +1,62 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+html {
+  color-scheme: dark;
+  font-family: 'Outfit', system-ui, sans-serif;
+}
+
+body {
+  margin: 0;
+  min-height: 100svh;
+  background: #05070d;
+  color: #e2e8f0;
+}
+
+#root {
+  min-height: 100svh;
+}
+
+::selection {
+  background: rgba(34, 211, 238, 0.25);
+}
+
+/* Month change: wall-calendar “page” snap-in */
+.calendar-flip-root {
+  perspective: 1400px;
+  transform-style: preserve-3d;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .calendar-flip-panel {
+    animation: calendar-page-snap 0.72s cubic-bezier(0.22, 1, 0.36, 1) both;
+    transform-origin: top center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .calendar-flip-panel {
+    animation: none;
+  }
+}
+
+@keyframes calendar-page-snap {
+  0% {
+    opacity: 0;
+    transform: rotateX(-22deg) translateY(18px) scale(0.97);
+    filter: blur(8px);
+  }
+  60% {
+    opacity: 1;
+    filter: blur(0);
+  }
+  100% {
+    opacity: 1;
+    transform: rotateX(0deg) translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+

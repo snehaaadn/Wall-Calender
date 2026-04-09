@@ -1,0 +1,36 @@
+# Wall Calendar
+
+Take-home calendar UI: React, Vite, Tailwind. Dark glass layout with a per-month hero, range selection on the grid, and notes saved in the browser (`localStorage`).
+
+## Setup
+
+```bash
+npm install
+npm run dev
+```
+
+Use the URL Vite prints (often `http://localhost:5173`).
+
+```bash
+npm run build
+npm run preview
+```
+
+`preview` serves the production build from `dist/`.
+
+## Behavior
+
+- Pick a start date, then an end date; a third click starts a new range. Single-day span uses a `1` badge.
+- Notes: one block for the visible month, one for a single selected day, one when a full range is selected.
+- Holidays use a fixed 2026 list in `src/utils/calendar.js`. Those days get an amber border on the grid; a small “Holiday” strip appears under the month when that month has entries.
+- Changing months runs a short panel animation on the calendar (`MonthFlipPanel`, styles in `src/index.css`).
+- Hero art swaps by month; a light color wash follows the month (`src/data/monthAccents.js`).
+
+## Stack
+
+- React 19, Vite 8, Tailwind 4 (`@tailwindcss/vite`)
+- Fonts loaded in `index.html` (Outfit + JetBrains Mono)
+
+## Ship
+
+`npm run build` then deploy `dist/` to any static host.
