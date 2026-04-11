@@ -21,7 +21,7 @@ npm run preview
 ## Behavior
 
 - Pick a start date, then an end date; a third click starts a new range. Single-day span uses a `1` badge.
-- Notes: one block for the visible month, one for a single selected day, one when a full range is selected.
+- Notes: month memo, day note, range note. Save writes to `localStorage`. **Stored** lists every range and day note that touches the open month (not only the current selection), plus month memo. Each block has **Delete**.
 - Holidays use a fixed 2026 list in `src/utils/calendar.js`. Those days get an amber border on the grid; a small “Holiday” strip appears under the month when that month has entries.
 - Changing months runs a short panel animation on the calendar (`MonthFlipPanel`, styles in `src/index.css`).
 - Hero art swaps by month; a light color wash follows the month (`src/data/monthAccents.js`).

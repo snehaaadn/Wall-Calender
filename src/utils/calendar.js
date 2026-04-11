@@ -50,6 +50,49 @@ export function buildMonthGrid(year, month) {
   return cells
 }
 
+/** @param {string} loKey @param {string} hiKey @param {number} year @param {number} monthIndex 0-11 */
+export function rangeOverlapsMonth(loKey, hiKey, year, monthIndex) {
+  const first = toKey(new Date(year, monthIndex, 1))
+  const last = toKey(new Date(year, monthIndex + 1, 0))
+  return loKey <= last && hiKey >= first
+}
+
+/**
+ * @param {Record<string, string>} rangeNotes
+ * @param {number} year
+ * @param {number} monthIndex 0-11
+ * @returns {{ storageKey: string, lo: string, hi: string, text: string }[]}
+ */
+export function rangeNoteEntriesForMonth(rangeNotes, year, monthIndex) {
+  return Object.entries(rangeNotes)
+    .map(([storageKey, raw]) => {
+      const parts = storageKey.split('_')
+      if (parts.length !== 2) return null
+      const [lo, hi] = parts
+      if (!lo || !hi) return null
+      const text = raw == null ? '' : String(raw)
+      if (!text.trim()) return null
+      if (!rangeOverlapsMonth(lo, hi, year, monthIndex)) return null
+      return { storageKey, lo, hi, text }
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.lo.localeCompare(b.lo))
+}
+
+/**
+ * @param {Record<string, string>} dayNotes
+ * @param {number} year
+ * @param {number} monthIndex 0-11
+ * @returns {{ dayKey: string, text: string }[]}
+ */
+export function dayNoteEntriesForMonth(dayNotes, year, monthIndex) {
+  const prefix = `${year}-${String(monthIndex + 1).padStart(2, '0')}-`
+  return Object.entries(dayNotes)
+    .filter(([k, v]) => k.startsWith(prefix) && v != null && String(v).trim())
+    .map(([dayKey, v]) => ({ dayKey, text: String(v) }))
+    .sort((a, b) => a.dayKey.localeCompare(b.dayKey))
+}
+
 /** US federal + common cultural dates (static demo, 2026). */
 export const HOLIDAYS = [
   { key: '2026-01-01', label: "New Year's Day" },

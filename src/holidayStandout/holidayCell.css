@@ -1,0 +1,49 @@
+/* Holiday day cells: glow stack + soft pulse (not a flat border). */
+
+.holiday-glow-cell {
+  border-color: transparent !important;
+  box-shadow:
+    0 0 0 1px rgba(252, 211, 77, 0.35),
+    0 0 14px rgba(251, 191, 36, 0.22),
+    0 0 28px -6px rgba(245, 158, 11, 0.35),
+    inset 0 1px 0 rgba(255, 250, 220, 0.12),
+    inset 0 -8px 16px -8px rgba(120, 53, 15, 0.15);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .holiday-glow-cell {
+    animation: holiday-cell-pulse 2.8s ease-in-out infinite;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .holiday-glow-cell {
+    animation: none;
+  }
+}
+
+@keyframes holiday-cell-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 1px rgba(252, 211, 77, 0.35),
+      0 0 14px rgba(251, 191, 36, 0.22),
+      0 0 28px -6px rgba(245, 158, 11, 0.3),
+      inset 0 1px 0 rgba(255, 250, 220, 0.1),
+      inset 0 -8px 16px -8px rgba(120, 53, 15, 0.12);
+  }
+  50% {
+    box-shadow:
+      0 0 0 2px rgba(253, 224, 71, 0.55),
+      0 0 22px rgba(251, 191, 36, 0.38),
+      0 0 36px -4px rgba(251, 146, 60, 0.42),
+      inset 0 1px 0 rgba(255, 252, 235, 0.18),
+      inset 0 -8px 16px -8px rgba(120, 53, 15, 0.18);
+  }
+}
+
+.holiday-glow-cell .holiday-day-num {
+  text-shadow:
+    0 0 12px rgba(251, 191, 36, 0.55),
+    0 0 2px rgba(15, 23, 42, 0.9);
+}

@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useLocalStorage } from '../hooks/useLocalStorage'
-import { normalizeRangeKey, toKey } from '../utils/calendar'
+import {
+  dayNoteEntriesForMonth,
+  normalizeRangeKey,
+  rangeNoteEntriesForMonth,
+  toKey,
+} from '../utils/calendar'
 import { MONTH_ORBIT_ACCENTS } from '../data/monthAccents'
 import { GlassCalendarGrid } from './GlassCalendarGrid'
 import { GlassHero } from './GlassHero'
@@ -20,6 +25,8 @@ export default function GlassWallCalendar() {
   const [rangeStart, setRangeStart] = useState(null)
   const [rangeEnd, setRangeEnd] = useState(null)
 
+  const [dockRev, setDockRev] = useState(0)
+
   const [monthNotes, setMonthNotes] = useLocalStorage('glass-cal-month-notes', {})
   const [dayNotes, setDayNotes] = useLocalStorage('glass-cal-day-notes', {})
   const [rangeNotes, setRangeNotes] = useLocalStorage('glass-cal-range-notes', {})
@@ -34,6 +41,20 @@ export default function GlassWallCalendar() {
 
   const singleDayNote =
     rangeStart && !rangeEnd ? (dayNotes[rangeStart] ?? '') : ''
+
+  const savedRangeRows = useMemo(
+    () => rangeNoteEntriesForMonth(rangeNotes, view.y, view.m),
+    [rangeNotes, view.y, view.m],
+  )
+
+  const savedDayRows = useMemo(
+    () => dayNoteEntriesForMonth(dayNotes, view.y, view.m),
+    [dayNotes, view.y, view.m],
+  )
+
+  const bumpDock = useCallback(() => {
+    setDockRev((r) => r + 1)
+  }, [])
 
   const setMonthNote = useCallback(
     (v) => {
@@ -56,6 +77,39 @@ export default function GlassWallCalendar() {
       setDayNotes((prev) => ({ ...prev, [rangeStart]: v }))
     },
     [rangeStart, rangeEnd, setDayNotes],
+  )
+
+  const deleteMonthNote = useCallback(() => {
+    setMonthNotes((prev) => {
+      const next = { ...prev }
+      delete next[monthKey]
+      return next
+    })
+    bumpDock()
+  }, [monthKey, setMonthNotes, bumpDock])
+
+  const deleteRangeNoteByKey = useCallback(
+    (storageKey) => {
+      setRangeNotes((prev) => {
+        const next = { ...prev }
+        delete next[storageKey]
+        return next
+      })
+      bumpDock()
+    },
+    [setRangeNotes, bumpDock],
+  )
+
+  const deleteDayNoteByKey = useCallback(
+    (dayKey) => {
+      setDayNotes((prev) => {
+        const next = { ...prev }
+        delete next[dayKey]
+        return next
+      })
+      bumpDock()
+    },
+    [setDayNotes, bumpDock],
   )
 
   const onDayClick = useCallback(
@@ -153,6 +207,7 @@ export default function GlassWallCalendar() {
           </div>
           <div className="order-3 lg:col-span-3">
             <GlassNotesDock
+              key={`${monthKey}|${rangeStart ?? ''}|${rangeEnd ?? ''}|${dockRev}`}
               monthKey={monthKey}
               monthNote={monthNote}
               onMonthNoteChange={setMonthNote}
@@ -162,6 +217,11 @@ export default function GlassWallCalendar() {
               onRangeNoteChange={onRangeNoteChange}
               singleDayNote={singleDayNote}
               onSingleDayNoteChange={onSingleDayNoteChange}
+              savedRangeRows={savedRangeRows}
+              savedDayRows={savedDayRows}
+              onDeleteMonthNote={deleteMonthNote}
+              onDeleteRangeNote={deleteRangeNoteByKey}
+              onDeleteDayNote={deleteDayNoteByKey}
             />
           </div>
         </div>

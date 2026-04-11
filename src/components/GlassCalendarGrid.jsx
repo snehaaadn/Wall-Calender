@@ -133,7 +133,16 @@ export function GlassCalendarGrid({
                 .filter(Boolean)
                 .join(' ')}
             >
-              <span className="font-mono text-[13px] md:text-sm">{date.getDate()}</span>
+              <span
+                className={[
+                  'font-mono text-[13px] md:text-sm',
+                  isHoliday && inMonth ? 'holiday-day-num font-semibold text-amber-50' : '',
+                ]
+                  .filter(Boolean)
+                  .join(' ')}
+              >
+                {date.getDate()}
+              </span>
               {isHoliday && inMonth && (
                 <HolidayStandoutMarker label={HOLIDAY_LABELS.get(key) ?? 'Observance'} />
               )}
