@@ -70,6 +70,11 @@ export default function GlassWallCalendar() {
     [dayNotes, view.y, view.m],
   )
 
+  const savedDayKeys = useMemo(
+    () => savedDayRows.map((r) => r.dayKey),
+    [savedDayRows],
+  )
+
   const bumpDock = useCallback(() => {
     setDockRev((r) => r + 1)
   }, [])
@@ -342,6 +347,7 @@ export default function GlassWallCalendar() {
                 onDayClick={onDayClick}
                 todayKey={todayKey}
                 savedRanges={savedRangeRows}
+                savedDayKeys={savedDayKeys}
               />
             </MonthFlipPanel>
             <MiniYearStrip

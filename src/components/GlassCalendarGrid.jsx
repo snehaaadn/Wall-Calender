@@ -37,6 +37,7 @@ const MONTH_NAMES = [
  *   onDayClick: (key: string) => void,
  *   todayKey: string,
  *   savedRanges?: { lo: string, hi: string }[],
+ *   savedDayKeys?: string[],
  * }} props
  */
 export function GlassCalendarGrid({
@@ -50,6 +51,7 @@ export function GlassCalendarGrid({
   onDayClick,
   todayKey,
   savedRanges = [],
+  savedDayKeys = [],
 }) {
   const cells = buildMonthGrid(year, monthIndex)
   const title = `${MONTH_NAMES[monthIndex]} ${year}`
@@ -118,16 +120,18 @@ export function GlassCalendarGrid({
           const isEnd = lo && hi && key === hi
           const isHoliday = HOLIDAY_KEYS.has(key)
           const isToday = key === todayKey
-          const inSavedRange =
-            inMonth &&
-            !inR &&
-            savedRanges.some(({ lo: sLo, hi: sHi }) => isInRange(key, sLo, sHi))
+          const inSavedRangeOnly = savedRanges.some(({ lo: sLo, hi: sHi }) =>
+            isInRange(key, sLo, sHi),
+          )
+          const inSavedDayOnly = savedDayKeys.includes(key)
+          const inStoredHighlight =
+            inMonth && !inR && (inSavedRangeOnly || inSavedDayOnly)
 
           let cellBg = 'bg-transparent'
           if (inR && inMonth) {
             cellBg = 'bg-cyan-500/15'
             if (isStart || isEnd) cellBg = 'bg-cyan-500/30'
-          } else if (inSavedRange) {
+          } else if (inStoredHighlight) {
             cellBg = 'bg-cyan-300/[0.14]'
           }
 
@@ -139,8 +143,12 @@ export function GlassCalendarGrid({
               title={
                 isHoliday && inMonth
                   ? (HOLIDAY_LABELS.get(key) ?? 'Observance')
-                  : inSavedRange
-                    ? 'Saved range note'
+                  : inStoredHighlight
+                    ? inSavedRangeOnly && inSavedDayOnly
+                      ? 'Saved day & range notes'
+                      : inSavedRangeOnly
+                        ? 'Saved range note'
+                        : 'Saved day note'
                     : undefined
               }
               onClick={() => inMonth && onDayClick(key)}
@@ -152,7 +160,7 @@ export function GlassCalendarGrid({
                 inMonth && !isHoliday
                   ? [
                       'border-white/5 text-slate-100 hover:border-cyan-400/30 hover:bg-white/5',
-                      inSavedRange ? 'border-cyan-400/25' : '',
+                      inStoredHighlight ? 'border-cyan-400/25' : '',
                     ]
                       .filter(Boolean)
                       .join(' ')
