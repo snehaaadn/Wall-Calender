@@ -31,10 +31,12 @@ const MONTH_NAMES = [
  *   monthIndex: number,
  *   onPrevMonth: () => void,
  *   onNextMonth: () => void,
+ *   onJumpToday: () => void,
  *   rangeStart: string | null,
  *   rangeEnd: string | null,
  *   onDayClick: (key: string) => void,
  *   todayKey: string,
+ *   savedRanges?: { lo: string, hi: string }[],
  * }} props
  */
 export function GlassCalendarGrid({
@@ -42,16 +44,21 @@ export function GlassCalendarGrid({
   monthIndex,
   onPrevMonth,
   onNextMonth,
+  onJumpToday,
   rangeStart,
   rangeEnd,
   onDayClick,
   todayKey,
+  savedRanges = [],
 }) {
   const cells = buildMonthGrid(year, monthIndex)
   const title = `${MONTH_NAMES[monthIndex]} ${year}`
   const bounds = rangeBounds(rangeStart, rangeEnd)
   const [lo, hi] = bounds ?? [null, null]
   const sameDay = Boolean(lo && hi && lo === hi)
+
+  const now = new Date()
+  const viewingToday = year === now.getFullYear() && monthIndex === now.getMonth()
 
   return (
     <div className="flex h-full min-h-[320px] flex-col rounded-3xl border border-white/10 bg-white/[0.04] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-2xl md:p-6">
@@ -62,7 +69,7 @@ export function GlassCalendarGrid({
           </p>
           <h3 className="text-lg font-semibold tracking-tight text-white md:text-xl">{title}</h3>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center justify-end gap-2">
           <button
             type="button"
             onClick={onPrevMonth}
@@ -70,6 +77,19 @@ export function GlassCalendarGrid({
             aria-label="Previous month"
           >
             ‹
+          </button>
+          <button
+            type="button"
+            onClick={onJumpToday}
+            className={[
+              'rounded-xl border px-3 py-2 text-xs font-medium transition',
+              viewingToday
+                ? 'border-white/10 bg-white/[0.03] text-slate-500'
+                : 'border-cyan-400/30 bg-cyan-500/10 text-cyan-100 hover:border-cyan-300/50 hover:bg-cyan-500/20',
+            ].join(' ')}
+            aria-label="Jump to this month (today)"
+          >
+            Today
           </button>
           <button
             type="button"
@@ -98,11 +118,17 @@ export function GlassCalendarGrid({
           const isEnd = lo && hi && key === hi
           const isHoliday = HOLIDAY_KEYS.has(key)
           const isToday = key === todayKey
+          const inSavedRange =
+            inMonth &&
+            !inR &&
+            savedRanges.some(({ lo: sLo, hi: sHi }) => isInRange(key, sLo, sHi))
 
           let cellBg = 'bg-transparent'
           if (inR && inMonth) {
             cellBg = 'bg-cyan-500/15'
             if (isStart || isEnd) cellBg = 'bg-cyan-500/30'
+          } else if (inSavedRange) {
+            cellBg = 'bg-cyan-300/[0.14]'
           }
 
           return (
@@ -111,16 +137,28 @@ export function GlassCalendarGrid({
               type="button"
               disabled={!inMonth}
               title={
-                isHoliday && inMonth ? (HOLIDAY_LABELS.get(key) ?? 'Observance') : undefined
+                isHoliday && inMonth
+                  ? (HOLIDAY_LABELS.get(key) ?? 'Observance')
+                  : inSavedRange
+                    ? 'Saved range note'
+                    : undefined
               }
               onClick={() => inMonth && onDayClick(key)}
               className={[
-                'relative flex min-h-[44px] flex-col items-center justify-center rounded-xl border text-sm font-medium transition',
+                'relative flex min-h-[44px] flex-col items-center justify-center rounded-xl border text-sm font-medium transition duration-150 will-change-transform',
+                inMonth
+                  ? 'cursor-pointer active:scale-[0.96] motion-reduce:active:scale-100'
+                  : '',
                 inMonth && !isHoliday
-                  ? 'cursor-pointer border-white/5 text-slate-100 hover:border-cyan-400/30 hover:bg-white/5'
+                  ? [
+                      'border-white/5 text-slate-100 hover:border-cyan-400/30 hover:bg-white/5',
+                      inSavedRange ? 'border-cyan-400/25' : '',
+                    ]
+                      .filter(Boolean)
+                      .join(' ')
                   : '',
                 inMonth && isHoliday
-                  ? `cursor-pointer text-slate-100 hover:bg-amber-500/15 ${holidayStandoutCellClasses(isHoliday, inMonth)}`
+                  ? `text-slate-100 hover:bg-amber-500/15 ${holidayStandoutCellClasses(isHoliday, inMonth)}`
                   : '',
                 !inMonth ? 'cursor-default border-transparent text-slate-600 opacity-40' : '',
                 cellBg,
@@ -161,8 +199,9 @@ export function GlassCalendarGrid({
         })}
       </div>
 
-      <p className="mt-3 text-center text-[11px] text-slate-500">
-        Tap start → end. Third tap resets. Range glows between anchors.
+      <p className="mt-3 text-center text-[11px] leading-relaxed text-slate-500">
+        Tap start → end; third tap resets. ← → or arrows change month; <span className="font-mono">T</span>{' '}
+        today; <span className="font-mono">Esc</span> clears selection.
       </p>
     </div>
   )

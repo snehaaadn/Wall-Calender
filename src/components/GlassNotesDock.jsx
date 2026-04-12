@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { normalizeRangeKey } from '../utils/calendar'
 
 function clip(text, max) {
@@ -51,6 +51,8 @@ export function GlassNotesDock({
   const [dayDraft, setDayDraft] = useState(singleDayNote)
 
   const [monthSavedAt, setMonthSavedAt] = useState(null)
+  const [copyFlash, setCopyFlash] = useState(false)
+  const copyTimer = useRef(0)
 
   const selectionLabel = hasRange
     ? `${rangeStart} → ${rangeEnd}`
@@ -80,6 +82,27 @@ export function GlassNotesDock({
     if (!rangeStart || rangeEnd) return
     onSingleDayNoteChange(dayDraft)
   }, [dayDraft, rangeStart, rangeEnd, onSingleDayNoteChange])
+
+  useEffect(() => {
+    return () => window.clearTimeout(copyTimer.current)
+  }, [])
+
+  const copySelection = useCallback(async () => {
+    const line = hasRange
+      ? `${rangeStart} → ${rangeEnd}`
+      : hasSingle
+        ? rangeStart
+        : ''
+    if (!line) return
+    try {
+      await navigator.clipboard.writeText(line)
+    } catch {
+      return
+    }
+    setCopyFlash(true)
+    window.clearTimeout(copyTimer.current)
+    copyTimer.current = window.setTimeout(() => setCopyFlash(false), 1600)
+  }, [hasRange, hasSingle, rangeStart, rangeEnd])
 
   const showMonthCard = Boolean(monthSavedAt || monthNote.trim())
   const hasAnyStored =
@@ -120,8 +143,25 @@ export function GlassNotesDock({
       <div className="my-4 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
 
       <div className="rounded-2xl border border-white/10 bg-black/25 p-3">
-        <p className="font-mono text-[10px] uppercase tracking-wider text-slate-500">Selection</p>
-        <p className="mt-1 font-mono text-xs text-cyan-100/90">{selectionLabel}</p>
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <div className="min-w-0">
+            <p className="font-mono text-[10px] uppercase tracking-wider text-slate-500">Selection</p>
+            <p className="mt-1 font-mono text-xs text-cyan-100/90">{selectionLabel}</p>
+          </div>
+          <div className="flex shrink-0 flex-col items-end gap-1">
+            <button
+              type="button"
+              disabled={!hasRange && !hasSingle}
+              onClick={copySelection}
+              className="rounded-lg border border-white/15 bg-white/5 px-2.5 py-1.5 text-[11px] font-medium text-slate-200 transition enabled:hover:border-cyan-400/35 enabled:hover:bg-cyan-500/10 disabled:cursor-not-allowed disabled:opacity-35"
+            >
+              Copy dates
+            </button>
+            {copyFlash && (
+              <span className="font-mono text-[10px] text-emerald-400/90">Copied</span>
+            )}
+          </div>
+        </div>
 
         {hasRange && (
           <label className="mt-3 block">
